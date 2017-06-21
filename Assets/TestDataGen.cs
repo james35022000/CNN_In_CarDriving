@@ -129,7 +129,7 @@ public class TestDataGen : MonoBehaviour
             car.transform.position = new Vector3(road.transform.position.x, 0.24f, road.transform.position.z);
             car.transform.rotation = road.transform.rotation;
             yield return new WaitForSeconds(0.5f);
-            Application.CaptureScreenshot("C:\\Users\\Jack-PC\\Desktop\\CNN\\ScreenShot_" + (screenShotCnt++).ToString() + ".png");
+            Application.CaptureScreenshot("C:\\Users\\Jack-NB\\Desktop\\CNN\\ScreenShot_" + (screenShotCnt++).ToString() + ".png");
         }
         screenShotFinish = true;
         yield return 0;

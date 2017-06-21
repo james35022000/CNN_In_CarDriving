@@ -4,8 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class point : MonoBehaviour {
-
-	//const
+    
 	public int num_plane = 500;
 
 	//public

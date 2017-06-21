@@ -14,6 +14,7 @@ public class collid : MonoBehaviour {
 		int  i = int.Parse(s);
 
 		if(!newbe.plane_check[i]){
+            GameObject.Find("Car").GetComponent<AutoDrive>().CurrentRoad = i;
 			newbe.plane_check [i] = true;
 			(newbe.point1) = (newbe.point1)+1;
 		}
