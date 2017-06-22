@@ -363,5 +363,12 @@ namespace UnityStandardAssets.Vehicles.Car
             }
             return false;
         }
+
+        public void ResetCar()
+        {
+            Skidding = false;
+            m_Rigidbody.velocity = new Vector3();
+            m_SteerAngle = 0;
+        }
     }
 }

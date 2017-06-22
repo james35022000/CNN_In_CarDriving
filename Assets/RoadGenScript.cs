@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine;
+using UnityStandardAssets.Vehicles.Car;
 
 
 public class RoadGenScript : MonoBehaviour
@@ -19,10 +20,11 @@ public class RoadGenScript : MonoBehaviour
     public const float START_ROT_X = 0;
     public const float START_ROT_Y = 0;
     public const float START_ROT_Z = 0;
-    public const float ROT = 3;
+    public const float ROT = 5;
     public const float OVERLAP = 0.5F;
     public const int MAP_SCALE = 500;
     public const int ROLLBACK = 50;
+    public const bool SAVE_ROAD = true;
 
     public bool isGenFinished = false;
 
@@ -56,10 +58,11 @@ public class RoadGenScript : MonoBehaviour
     void ClickBtn()
     {
         isGenFinished = false;
+        
         initVar();
 
         RoadGen();
-
+        GameObject.Find("Car").GetComponent<CarController>().ResetCar();
         GameObject.Find("Car").transform.position = new Vector3(
                                                             GameObject.Find("road (5)").transform.position.x,
                                                             0.3075473F,

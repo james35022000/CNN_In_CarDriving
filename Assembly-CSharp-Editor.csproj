@@ -6,7 +6,7 @@
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <RootNamespace></RootNamespace>
-    <ProjectGuid>{8694C30B-3390-389E-33C5-12CB81589501}</ProjectGuid>
+    <ProjectGuid>{A344B624-73D6-E02B-8879-93F5007FEE81}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <AssemblyName>Assembly-CSharp-Editor</AssemblyName>
@@ -46,13 +46,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\EasyRoads3D Free\Editor\EasyRoadsEditorMenu.cs" />
-     <Compile Include="Assets\EasyRoads3D Free\Editor\NewEasyRoads3D.cs" />
-     <Compile Include="Assets\EasyRoads3D Free\Editor\ObjectManager.cs" />
-     <Compile Include="Assets\EasyRoads3D Free\Editor\ProceduralObjectsEditor.cs" />
-     <Compile Include="Assets\EasyRoads3D Free\Editor\SideObjectImporter.cs" />
-     <Compile Include="Assets\EasyRoads3D Free\Editor\SideObjectInit.cs" />
+     <Compile Include="Assets\src\UnityPackage\Assets\Editor\CodeAnalysisVsHook.cs" />
      <None Include="Assets\EasyRoads3D Free\Shaders\EasyRoads3D-Normal-BumpSpec.shader" />
+     <None Include="Assets\src\UnityPackage\Assets\UnityPackages\DOTween\DOTween43.xml" />
      <None Include="Assets\EasyRoads3D Free\Shaders\EasyRoads3D-Surface.shader" />
      <None Include="Assets\EasyRoads3D Free\Shaders\EasyRoads3D-Alpha-Bumped.shader" />
      <None Include="Assets\EasyRoads3D Free\Shaders\EasyRoads3D-Surface_Alpha.shader" />
@@ -66,11 +62,11 @@
      <None Include="Assets\Standard Assets\CrossPlatformInput\CrossPlatformInputGuidelines.txt" />
      <None Include="Assets\EasyRoads3D Free\Shaders\surfaceAlpha.shader" />
      <None Include="Assets\EasyRoads3D Free\Shaders\EasyRoads3D-Normal-Diffuse.shader" />
+     <None Include="Assets\src\UnityPackage\Assets\UnityPackages\DOTween\DOTween46.xml" />
+     <None Include="Assets\src\UnityPackage\Assets\UnityPackages\DOTween\DOTween50.xml" />
      <None Include="Assets\Standard Assets\Vehicles\Car\CarGuidelines.txt" />
      <None Include="Assets\EasyRoads3D Free\Shaders\Surface.shader" />
-     <None Include="Assets\EasyRoads3D Free\_Readme.txt" />
-     <None Include="Assets\EasyRoads3D Free\_readme 1.txt" />
-     <None Include="Assets\EasyRoads3D Free\Release Notes.txt" />
+     <None Include="Assets\src\UnityPackage\ProjectSettings\ProjectVersion.txt" />
      <None Include="Assets\EasyRoads3D Free\Shaders\EasyRoads3D-Road-Edit-Mode.shader" />
      <None Include="Assets\EasyRoads3D Free\Shaders\EasyRoads3D-Normal-Bumped.shader" />
  <Reference Include="UnityEditor.Advertisements">
@@ -121,26 +117,44 @@
  <Reference Include="UnityEngine.VR">
  <HintPath>C:/Program Files/Unity/Editor/Data/UnityExtensions/Unity/UnityVR/RuntimeEditor/UnityEngine.VR.dll</HintPath>
  </Reference>
- <Reference Include="EasyRoads3DEditor">
- <HintPath>C:/Users/Jack-PC/Documents/CNN_CarDriving/Assets/EasyRoads3D Free/Editor/EasyRoads3DEditor.dll</HintPath>
- </Reference>
- <Reference Include="EasyRoads3D">
- <HintPath>C:/Users/Jack-PC/Documents/CNN_CarDriving/Assets/EasyRoads3D Free/lib/EasyRoads3D.dll</HintPath>
- </Reference>
  <Reference Include="UnityEditor.Graphs">
  <HintPath>C:/Program Files/Unity/Editor/Data/Managed/UnityEditor.Graphs.dll</HintPath>
  </Reference>
  <Reference Include="UnityEditor.WindowsStandalone.Extensions">
  <HintPath>C:/Program Files/Unity/Editor/Data/PlaybackEngines/windowsstandalonesupport/UnityEditor.WindowsStandalone.Extensions.dll</HintPath>
  </Reference>
+ <Reference Include="DOTweenEditor">
+ <HintPath>C:/Users/Jack-PC/Documents/GitHub/CNN_In_CarDriving/Assets/src/UnityPackage/Assets/UnityPackages/DOTween/Editor/DOTweenEditor.dll</HintPath>
+ </Reference>
+ <Reference Include="DOTween50">
+ <HintPath>C:/Users/Jack-PC/Documents/GitHub/CNN_In_CarDriving/Assets/src/UnityPackage/Assets/UnityPackages/DOTween/DOTween50.dll</HintPath>
+ </Reference>
+ <Reference Include="Common.Logging.Core">
+ <HintPath>C:/Users/Jack-PC/Documents/GitHub/CNN_In_CarDriving/Assets/src/UnityPackage/Assets/UnityPackages/CommonLogging/Common.Logging.Core.dll</HintPath>
+ </Reference>
+ <Reference Include="DOTween46">
+ <HintPath>C:/Users/Jack-PC/Documents/GitHub/CNN_In_CarDriving/Assets/src/UnityPackage/Assets/UnityPackages/DOTween/DOTween46.dll</HintPath>
+ </Reference>
+ <Reference Include="Common.Logging.Extensions">
+ <HintPath>C:/Users/Jack-PC/Documents/GitHub/CNN_In_CarDriving/Assets/src/UnityPackage/Assets/UnityPackages/CommonLogging/Common.Logging.Extensions.dll</HintPath>
+ </Reference>
+ <Reference Include="DOTween">
+ <HintPath>C:/Users/Jack-PC/Documents/GitHub/CNN_In_CarDriving/Assets/src/UnityPackage/Assets/UnityPackages/DOTween/DOTween.dll</HintPath>
+ </Reference>
+ <Reference Include="Common.Logging">
+ <HintPath>C:/Users/Jack-PC/Documents/GitHub/CNN_In_CarDriving/Assets/src/UnityPackage/Assets/UnityPackages/CommonLogging/Common.Logging.dll</HintPath>
+ </Reference>
+ <Reference Include="DOTween43">
+ <HintPath>C:/Users/Jack-PC/Documents/GitHub/CNN_In_CarDriving/Assets/src/UnityPackage/Assets/UnityPackages/DOTween/DOTween43.dll</HintPath>
+ </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="Assembly-CSharp-firstpass.csproj">
-      <Project>{C36D5CEF-9269-3402-E696-95339FAC4986}</Project>      <Name>Assembly-CSharp-firstpass</Name>    </ProjectReference>
+      <Project>{BC2CA6A1-FE30-EB3C-1C0A-488AECDCB6B3}</Project>      <Name>Assembly-CSharp-firstpass</Name>    </ProjectReference>
     <ProjectReference Include="Assembly-CSharp.csproj">
-      <Project>{51952B53-71BC-9EB7-917B-090C7EE58537}</Project>      <Name>Assembly-CSharp</Name>    </ProjectReference>
+      <Project>{12B5F59A-9225-4DCA-F8C6-C74081F26E3C}</Project>      <Name>Assembly-CSharp</Name>    </ProjectReference>
     <ProjectReference Include="Assembly-CSharp-Editor-firstpass.csproj">
-      <Project>{6FD2B855-68A8-4201-D6A5-D8F090781401}</Project>      <Name>Assembly-CSharp-Editor-firstpass</Name>    </ProjectReference>
+      <Project>{2FB12873-76EE-A0F2-B0C1-9F1E143E8940}</Project>      <Name>Assembly-CSharp-Editor-firstpass</Name>    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
