@@ -55,7 +55,7 @@ public class RoadGenScript : MonoBehaviour
 
     }
 
-    void ClickBtn()
+    public void ClickBtn()
     {
         isGenFinished = false;
         

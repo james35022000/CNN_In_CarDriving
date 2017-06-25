@@ -5,6 +5,13 @@ using UnityStandardAssets.Vehicles.Car;
 
 public class AutoDrive : MonoBehaviour
 {
+    public struct Status
+    {
+        public CarController.CarStatus carStatus;
+        public Vector3 position;
+        public Vector3 rotation;
+    }
+
     private const float SpeedSensitivity = 10f;
     private const int RoadCount = 500;
     private const float InitMaxSpeed = 100f * 2.23693629f;  // MPH
@@ -26,6 +33,9 @@ public class AutoDrive : MonoBehaviour
     private float sensitivity = 1f;
     private float dead = 0.001f;
 
+
+    private Status[] status = new Status[RoadCount];
+
     // Use this for initialization
     void Start()
     {
@@ -44,13 +54,26 @@ public class AutoDrive : MonoBehaviour
     {
         if (GameObject.Find("Button").GetComponent<RoadGenScript>().isGenFinished == true)
         {
-            if (CurrentRoad >= RoadCount)
+            if (CurrentRoad >= RoadCount - 5)
+            {
+                GameObject.Find("Button").GetComponent<RoadGenScript>().ClickBtn();
                 return;
+            }
+            if(OutsideCheck())
+            {
+                GameObject.Find("Button").GetComponent<RoadGenScript>().ClickBtn();
+                //LoadStatus(CurrentRoad - 20);
+                return;
+            }
+
             DirectionDegree = 0;
+
+            SaveStatus();
             AngleCheck();
             CenterCheck();
+            DisplayUI();
             //Debug.Log(DirectionDegree.ToString());
-            UI();
+
             if (DirectionDegree >= MaxDirectionDegree)
             {
                 //Debug.Log("RIGHT");
@@ -80,8 +103,6 @@ public class AutoDrive : MonoBehaviour
 
             m_car.Move(steering, accel, accel, 0f);
         }
-        //else
-        //    CurrentRoad = 5;
     }
 
     private float AccelSimulation(string KEY)
@@ -170,7 +191,7 @@ public class AutoDrive : MonoBehaviour
     {
         //Debug.Log("CurrentRoad:" + CurrentRoad);
         float CarRot = NormalizeAngle(m_car.transform.eulerAngles.y);
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 6; i++)
         {
             GameObject road = GameObject.Find("road (" + (CurrentRoad + i).ToString() + ")");
             float RoadRot = NormalizeAngle(road.transform.eulerAngles.y);
@@ -181,22 +202,23 @@ public class AutoDrive : MonoBehaviour
             if(Angle > 0)
             {
                 //Debug.Log("Angle:" + Angle);
-                DirectionDegree += Angle / 90 * ((i == 0 || i == 1)?5 : 4);
             }
             else if(Angle < 0)
             {
                 //Debug.Log("-Angle:" + Angle);
-                DirectionDegree += Angle / 90 * ((i == 0 || i == 1) ? 5 : 4);
             }
+            DirectionDegree += Angle / 90 * ((i >= 0 && i <= 1) ? 5 : (i >= 2 || i <= 4) ? 3 : 2);
         }
     }
 
     private bool OutsideCheck()
     {
+        if (m_car.transform.position.y < 0.2)
+            return true;
         return false;
     }
 
-    private void UI()
+    private void DisplayUI()
     {
         GameObject RightRate = GameObject.Find("RightRate");
         GameObject LeftRate = GameObject.Find("LeftRate");
@@ -213,4 +235,24 @@ public class AutoDrive : MonoBehaviour
             LeftRate.transform.position = new Vector3(400 + 75 * DirectionDegree/8, 750, 0);
         }
     }
+
+    private void SaveStatus()
+    {
+        status[CurrentRoad].carStatus = GameObject.Find("Car").GetComponent<CarController>().SaveCarStatus();
+        status[CurrentRoad].position = GameObject.Find("Car").transform.position;
+        status[CurrentRoad].rotation = GameObject.Find("Car").transform.eulerAngles;
+    }
+
+    private void LoadStatus(int RoadNum)
+    {
+        GameObject.Find("Car").GetComponent<CarController>().LoadCarStatus(status[RoadNum].carStatus);
+        GameObject.Find("Car").transform.position = new Vector3(status[RoadNum].position.x,
+                                                                status[RoadNum].position.y,
+                                                                status[RoadNum].position.z);
+        GameObject.Find("Car").transform.eulerAngles = new Vector3(status[RoadNum].rotation.x,
+                                                                   status[RoadNum].rotation.y,
+                                                                   status[RoadNum].rotation.z);
+
+    }
 }
+

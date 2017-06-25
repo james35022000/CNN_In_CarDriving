@@ -37,6 +37,19 @@ namespace UnityStandardAssets.Vehicles.Car
         [SerializeField] private float m_SlipLimit;
         [SerializeField] private float m_BrakeTorque;
 
+        public struct CarStatus
+        {
+            public WheelCollider[] m_WheelColliders;
+            public Quaternion[] m_WheelMeshLocalRotations;
+            public Vector3 m_Prevpos, m_Pos;
+            public float m_SteerAngle;
+            public int m_GearNum;
+            public float m_GearFactor;
+            public float m_OldRotation;
+            public float m_CurrentTorque;
+            public Rigidbody m_Rigidbody;
+        }
+
         private Quaternion[] m_WheelMeshLocalRotations;
         private Vector3 m_Prevpos, m_Pos;
         private float m_SteerAngle;
@@ -369,6 +382,45 @@ namespace UnityStandardAssets.Vehicles.Car
             Skidding = false;
             m_Rigidbody.velocity = new Vector3();
             m_SteerAngle = 0;
+        }
+
+        public CarStatus SaveCarStatus()
+        {
+            CarStatus carStatus;
+            carStatus.m_WheelColliders = new WheelCollider[4];
+            carStatus.m_WheelColliders[0] = m_WheelColliders[0];
+            carStatus.m_WheelColliders[1] = m_WheelColliders[1];
+            carStatus.m_WheelColliders[2] = m_WheelColliders[2];
+            carStatus.m_WheelColliders[3] = m_WheelColliders[3];
+            carStatus.m_CurrentTorque = m_CurrentTorque;
+            carStatus.m_GearFactor = m_GearFactor;
+            carStatus.m_GearNum = m_GearNum;
+            carStatus.m_OldRotation = m_OldRotation;
+            carStatus.m_Pos = m_Pos;
+            carStatus.m_Prevpos = m_Prevpos;
+            carStatus.m_Rigidbody = m_Rigidbody;
+            carStatus.m_SteerAngle = m_SteerAngle;
+            carStatus.m_WheelMeshLocalRotations = m_WheelMeshLocalRotations;
+            return carStatus;
+        }
+
+        public void LoadCarStatus(CarStatus carStatus)
+        {
+            m_WheelColliders = carStatus.m_WheelColliders;
+            m_WheelColliders[0].attachedRigidbody.centerOfMass = m_CentreOfMassOffset;
+
+            m_MaxHandbrakeTorque = float.MaxValue;
+            
+
+            m_CurrentTorque = carStatus.m_CurrentTorque;
+            m_GearFactor = carStatus.m_GearFactor;
+            m_GearNum = carStatus.m_GearNum;
+            m_OldRotation = carStatus.m_OldRotation;
+            m_Pos = carStatus.m_Pos;
+            m_Prevpos = carStatus.m_Prevpos;
+            m_Rigidbody = carStatus.m_Rigidbody;
+            m_SteerAngle = carStatus.m_SteerAngle;
+            m_WheelMeshLocalRotations = carStatus.m_WheelMeshLocalRotations;
         }
     }
 }
