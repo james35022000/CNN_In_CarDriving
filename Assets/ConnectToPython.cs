@@ -17,24 +17,28 @@ public class ConnectToPython : MonoBehaviour
     static int width = Screen.width;
     static int height = Screen.height;
     static Texture2D texture2d;
-    static byte[][] screenshot = new byte[1][];
+
+    public TestDataGen.TestData[] testData = null;
+    
 
     // Use this for initialization
     void Start()
     {
-        texture2d = new Texture2D(width, height, TextureFormat.RGB24, false);
         (new Thread(ServerListening)).Start();
     }
 
     // Update is called once per frame
     void Update()
     {
-        texture2d.ReadPixels(new Rect(0, 0, width, height), 0, 0);
-        texture2d.Apply();
-        screenshot[0] = texture2d.EncodeToPNG();
+
+    }
+
+    public void AddTestData(TestDataGen.TestData[] t)
+    {
+        testData = t;
     }
     
-    private static void ServerListening()
+    private void ServerListening()
     {
         while (true)
         {
@@ -53,15 +57,24 @@ public class ConnectToPython : MonoBehaviour
                     if (data == "CNN_CarDriving_Client")
                     {
                         Debug.Log("Connect!");
-                        int cnt = 0;
-                        while (true)
+                        while (handler.Connected)
                         {
-                            Thread.Sleep(1000);
-                            Debug.Log("Take ScreenShot NO." + (++cnt).ToString());
-                            handler.Send(screenshot[0]);
-                            count = handler.Receive(bytes);
-                            data = Encoding.ASCII.GetString(bytes, 0, count);
-                            ControlCar(data);
+                            if (testData != null)
+                            {
+                                for (int i = 0; i < 400; i++)
+                                {
+                                    if (testData[i] == null)
+                                        break;
+                                    handler.Send(testData[i].screenShot);
+                                    testData[i].screenShot = null;
+                                    handler.Receive(bytes);
+                                    handler.Send(Encoding.ASCII.GetBytes(testData[i].speed + " " + testData[i].direction));
+                                    handler.Receive(bytes);
+                                    testData[i] = null;
+                                }
+                                testData = null;
+                                GC.Collect();
+                            }
                         }
                     }
                     handler.Shutdown(SocketShutdown.Both);

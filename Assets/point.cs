@@ -22,7 +22,7 @@ public class point : MonoBehaviour {
 	void Update () {
 		if (point1 != point2) {
 			point2 = point1;
-			GameObject.Find ("Canvas/Text").GetComponent<Text> ().text = "Score : " + point2.ToString ();
+			//GameObject.Find ("Canvas/Text").GetComponent<Text> ().text = "Score : " + point2.ToString ();
 		}
 	}
 

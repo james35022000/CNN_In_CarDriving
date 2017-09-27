@@ -2,73 +2,156 @@
 using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine;
-using System.Threading;
+using UnityStandardAssets.Vehicles.Car;
+
 
 public class TestDataGen : MonoBehaviour
 {
 
     //const string ROAD_NAME = "road";
-    const int ROAD_COUNT = 500;
+    public const int ROAD_COUNT = 500;
 
-    const float ROAD_SCALE_X = 8;
-    const float ROAD_SCALE_Y = 0.5F;
-    const float ROAD_SCALE_Z = 1.25F;
-    const float START_POS_X = ROAD_SCALE_X / 2 + 250;
-    const float START_POS_Y = 0;
-    const float START_POS_Z = ROAD_SCALE_Z / 2 + 250;
-    const float START_ROT_X = 0;
-    const float START_ROT_Y = 0;
-    const float START_ROT_Z = 0;
-    const float ROT = 5;
-    const float OVERLAP = 0.5F;
-    const int MAP_SCALE = 500;
-    const int ROLLBACK = 50;
+    public const float ROAD_SCALE_X = 8;
+    public const float ROAD_SCALE_Y = 0.5F;
+    public const float ROAD_SCALE_Z = 1.25F;
+    public const float START_POS_X = ROAD_SCALE_X / 2 + 250;
+    public const float START_POS_Y = 0;
+    public const float START_POS_Z = ROAD_SCALE_Z / 2 + 250;
+    public const float START_ROT_X = 0;
+    public const float START_ROT_Y = 0;
+    public const float START_ROT_Z = 0;
+    public const float ROT = 4.9f;
+    public const float OVERLAP = 0.5F;
+    public const int MAP_SCALE = 500;
+    public const int ROLLBACK = 50;
+    public const bool SAVE_ROAD = true;
+    public const int ROAD_DIFFICULTY = 3; // (1:Easy 2:Normal 3:Difficult)
+
+    public bool isGenFinished = false;
 
     const int ROAD_OCCUPIED_TABLE_SIZE = 100 * (int)(ROAD_SCALE_Z * 50);
 
     bool[,] ROAD_OCCUPIED_TABLE;
-    bool screenShotFinish = true;
+
+    bool isGen = false;
+    int screanShotCnt = 0;
+
     List<List<Vector2>> ROAD_OCCUPIED_LIST;
 
     Vector3 NEXT_POS, NEXT_ROT;
 
     List<Vector2> RandList;
 
-    int screenShotCnt = 60008;
+    
+    private int width = Screen.width;
+    private int height = Screen.height;
+    private TestData[] testData;
+    public int testDataCnt;
+
+    Texture2D texture2d;
+
+    public class TestData
+    {
+        public TestData(byte[] screenShot, string direction, float speed)
+        {
+            this.screenShot = screenShot;
+            this.direction = direction;
+            this.speed = speed;
+        }
+
+        public byte[] screenShot;
+        public string direction;
+        public float speed;
+    }
 
 
 
     // Use this for initialization
     void Start()
     {
-        Button btn = GetComponent<Button>();
-        btn.onClick.AddListener(delegate {
-            ClickBtn();
-        });
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (screenShotFinish)
+        if (!isGen)
         {
-            screenShotFinish = false;
-            initVar();
-            RoadGen();
+            ClickBtn();
+            isGen = true;
         }
+        if(screanShotCnt % 6 == 0)
+            StartCoroutine(ScreenShot());
+        screanShotCnt++;
+    }
+    
+    public void ResetTestData()
+    {
+        screanShotCnt = 0;
+        testDataCnt = 0;
+        testData = new TestData[400];
+        testData[testDataCnt] = null;
     }
 
-    void ClickBtn()
+    public void SendTestData()
     {
-        GameObject.Find("Car").transform.position = new Vector3(START_POS_X, 0.25F, START_POS_Z + 1.25F);
-        
+        /*for(int i = 0; i < 400; i++)
+        {
+            if (testData[i] == null) break;
+            testData[i].screenShot = null;
+        }
+        testData = null;
+        System.GC.Collect();*/
+        GameObject.Find("Road").GetComponent<ConnectToPython>().AddTestData(testData);
+        ResetTestData();
+    }
+
+    IEnumerator ScreenShot()
+    {
+        texture2d = new Texture2D(width, height, TextureFormat.RGB24, false);
+        yield return new WaitForEndOfFrame();
+        texture2d.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+        texture2d.Apply();
+        Texture2D newTexture2d = new Texture2D(50, 50, TextureFormat.RGB24, false);
+        for (int i = 0; i < 50; i++)
+            for (int j = 0; j < 50; j++)
+                newTexture2d.SetPixel(i, j, texture2d.GetPixel(i * width / 50, j * height / 50));
+        newTexture2d.Apply();
+        Destroy(texture2d);
+        texture2d = null;
+        testData[testDataCnt++] = new TestData(newTexture2d.EncodeToPNG(),
+                                                GameObject.Find("Car").GetComponent<AutoDrive>().direction,
+                                                GameObject.Find("Car").GetComponent<CarController>().CurrentSpeed);
+        Destroy(newTexture2d);
+        newTexture2d = null;
+        System.GC.Collect();
+        testData[testDataCnt] = null;
+    }
+
+    public void ClickBtn()
+    {
+        isGenFinished = false;
+
+        initVar();
+
+        RoadGen();
+        GameObject.Find("Car").GetComponent<CarController>().ResetCar();
+        GameObject.Find("Car").transform.position = new Vector3(
+                                                            GameObject.Find("road (5)").transform.position.x,
+                                                            0.3075473F,
+                                                            GameObject.Find("road (5)").transform.position.z);
+        GameObject.Find("Car").transform.rotation = GameObject.Find("road (5)").transform.rotation;
+
+        ResetTestData();
+
+        isGenFinished = true;
     }
 
     void RoadGen()
     {
         GameObject road, plane;
         Vector2 rand = new Vector2();
-        
+
         int RollBackCount = 1, LastRollBackIndex = 0, randIndex = 0;
         road = GameObject.Find("road (1)");
         plane = GameObject.Find("plane (1)");
@@ -114,25 +197,13 @@ public class TestDataGen : MonoBehaviour
             }
         }
 
-        screenShotFinish = false;
-        StartCoroutine(screenShot());
-    }
-
-    IEnumerator screenShot()
-    {
-        GameObject car = GameObject.Find("Car");
-        GameObject road;
-        for (int i = 5; i < ROAD_COUNT-30; i+=5)
+        for (int i = 0; i < 20; i++)
         {
-            Debug.Log("ScreenShot");
-            road = GameObject.Find("road (" + i.ToString() + ")");
-            car.transform.position = new Vector3(road.transform.position.x, 0.24f, road.transform.position.z);
-            car.transform.rotation = road.transform.rotation;
-            yield return new WaitForSeconds(0.5f);
-            Application.CaptureScreenshot("C:\\Users\\Jack-NB\\Desktop\\CNN\\ScreenShot_" + (screenShotCnt++).ToString() + ".png");
+            road = GameObject.Find("road (" + (ROAD_COUNT + i).ToString() + ")");
+            plane = GameObject.Find("plane (" + (ROAD_COUNT + i).ToString() + ")");
+            road.transform.position = new Vector3(0, 0, 0);
+            plane.transform.position = new Vector3(0, 0, 0);
         }
-        screenShotFinish = true;
-        yield return 0;
     }
 
     int RollBack(GameObject road, int RollBackCount)
@@ -142,7 +213,7 @@ public class TestDataGen : MonoBehaviour
             RoadCount += (int)RandList[getRandIndex(getRoadNum(road) - 1) - i].y;
 
         updateRand(getRandIndex(getRoadNum(road) - 1) - RollBackCount);
-        
+
         //if((getRoadNum(road) - RoadCount) < 0)
         //{
         //    Debug.Log("RollBackCount:" + RollBackCount.ToString());
@@ -272,37 +343,6 @@ public class TestDataGen : MonoBehaviour
         return System.Convert.ToInt32(token[1].Split(")".ToCharArray(), token[1].Length)[0]);
     }
 
-    void initRand()
-    {
-        int direction, count;
-        RandList = new List<Vector2>();
-        for (int i = 0; i < ROAD_COUNT;)
-        {
-            direction = Random.Range(0, 8);
-            count = Random.Range(1, 20);
-            if (direction < 6)
-            {
-                i += count;
-                if (i >= ROAD_COUNT)
-                {
-                    count = count - i + ROAD_COUNT - 1;
-                    i = ROAD_COUNT;
-                }
-                RandList.Add(new Vector2(0, count));
-            }
-            else
-            {
-                i += count;
-                if (i >= ROAD_COUNT)
-                {
-                    count = count - i + ROAD_COUNT - 1;
-                    i = ROAD_COUNT;
-                }
-                RandList.Add(new Vector2(direction - 5, count));
-            }
-        }
-    }
-
     Vector2 myRand(int roadCount)
     {
         return RandList[getRandIndex(roadCount)];
@@ -324,16 +364,22 @@ public class TestDataGen : MonoBehaviour
     {
         List<Vector2> NewRandList = new List<Vector2>();
         int direction, count, j = 0;
+        int dRate = ROAD_DIFFICULTY == 3 ? 5 : (ROAD_DIFFICULTY == 2 ? 7 : 9);
         for (int i = 0; i < randIndex; i++)
         {
             j += (int)RandList[i].y;
             NewRandList.Add(RandList[i]);
         }
+        if (randIndex == 0)
+        {
+            NewRandList.Add(new Vector2(0, 10));
+            j += 10;
+        }
         for (; j < ROAD_COUNT;)
         {
-            direction = Random.Range(0, 8);
-            count = Random.Range(1, 20);
-            if (direction < 6)
+            direction = Random.Range(0, dRate);
+            count = Random.Range(5, 20);
+            if (direction < dRate - 2)
             {
                 j += count;
                 if (j >= ROAD_COUNT)
@@ -345,13 +391,22 @@ public class TestDataGen : MonoBehaviour
             }
             else
             {
+                direction = direction - 2;
+                if (NewRandList.Count > 0)
+                    if (NewRandList[NewRandList.Count - 1].x == direction)
+                    {
+                        if (Random.Range(0, 2) == 1)
+                            direction = direction == 1 ? 2 : 1;
+                        else
+                            direction = 0;
+                    }
                 j += count;
                 if (j >= ROAD_COUNT)
                 {
                     count = count - j + ROAD_COUNT - 1;
                     j = ROAD_COUNT;
                 }
-                NewRandList.Add(new Vector2(direction - 5, count));
+                NewRandList.Add(new Vector2(direction, count));
             }
         }
         RandList = NewRandList;
@@ -363,12 +418,11 @@ public class TestDataGen : MonoBehaviour
             GameObject.Find("Car").GetComponent<point>().plane_check[i] = false;
         GameObject.Find("Car").GetComponent<point>().point1 = 0;
         GameObject.Find("Car").GetComponent<point>().point2 = 0;
-        GameObject.Find("Canvas/Text").GetComponent<Text>().text = "Score : 0";
 
-        initRand();
+        updateRand(0);
 
         ROAD_OCCUPIED_LIST = new List<List<Vector2>>();
-        for (int i = 0; i <= ROAD_COUNT; i++)
+        for (int i = 0; i <= ROAD_COUNT + 20; i++)
         {
             ROAD_OCCUPIED_LIST.Add(new List<Vector2>());
         }
@@ -377,5 +431,10 @@ public class TestDataGen : MonoBehaviour
 
         NEXT_POS = new Vector3(START_POS_X, START_POS_Y, START_POS_Z);
         NEXT_ROT = new Vector3(START_ROT_X, START_ROT_Y, START_ROT_Z);
+    }
+
+    public Vector3 getScale()
+    {
+        return new Vector3(ROAD_SCALE_X, ROAD_SCALE_Y, ROAD_SCALE_Z);
     }
 }

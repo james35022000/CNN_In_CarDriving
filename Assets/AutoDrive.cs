@@ -14,16 +14,16 @@ public class AutoDrive : MonoBehaviour
 
     private const float SpeedSensitivity = 10f;
     private const int RoadCount = 500;
-    private const float InitMaxSpeed = 100f * 2.23693629f;  // MPH
+    private const float InitMaxSpeed = 40f;
     private const float StopAccelRate = 0.8f;
     private const float PreviewRate = 0.3f;
     private const float IgnoreAngleRate = 0.5f;
-    private const float CenterOffset = 1f;
+    private const float CenterOffset = 0.8f;
 
     private CarController m_car;
 
     public int CurrentRoad = 11;
-    private float[] MaxSpeedTable = new float[RoadCount];
+    private float[] MaxSpeedTable = new float[RoadCount + 100];
     private int PreviewCount = 0;
     private float DirectionDegree = 0;
     private float MaxDirectionDegree = 0.2f;
@@ -33,13 +33,14 @@ public class AutoDrive : MonoBehaviour
     private float sensitivity = 1f;
     private float dead = 0.001f;
 
+    public string direction = "0000"; // left, right, forward, backward
 
     private Status[] status = new Status[RoadCount];
 
     // Use this for initialization
     void Start()
     {
-        for (int i = 0; i < RoadCount; i++)
+        for (int i = 0; i < RoadCount + 100; i++)
             MaxSpeedTable[i] = InitMaxSpeed;
         m_car = GameObject.Find("Car").GetComponent<CarController>();
     }
@@ -52,17 +53,31 @@ public class AutoDrive : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (GameObject.Find("Button").GetComponent<RoadGenScript>().isGenFinished == true)
+        if (GameObject.Find("Road").GetComponent<TestDataGen>().isGenFinished == true)
         {
-            if (CurrentRoad >= RoadCount - 5)
+            if (CurrentRoad >= RoadCount - 20)
             {
-                GameObject.Find("Button").GetComponent<RoadGenScript>().ClickBtn();
+                for (int i = 0; i < RoadCount + 100; i++)
+                    MaxSpeedTable[i] = InitMaxSpeed;
+                GameObject.Find("Road").GetComponent<TestDataGen>().SendTestData();
+                GameObject.Find("Road").GetComponent<TestDataGen>().ClickBtn();
                 return;
             }
             if(OutsideCheck())
             {
-                GameObject.Find("Button").GetComponent<RoadGenScript>().ClickBtn();
-                //LoadStatus(CurrentRoad - 20);
+                GameObject.Find("Road").GetComponent<TestDataGen>().ResetTestData();
+                if (m_car.CurrentSpeed <= 10f)
+                {
+                    for (int i = 0; i < RoadCount + 100; i++)
+                        MaxSpeedTable[i] = InitMaxSpeed;
+                    GameObject.Find("Road").GetComponent<TestDataGen>().ClickBtn();
+                    return;
+                }
+                int cnt = CurrentRoad >= 70 ? 70 : CurrentRoad;
+                for (int i = CurrentRoad - cnt; i < CurrentRoad + 20; i++)
+                    MaxSpeedTable[i] = m_car.CurrentSpeed - (5f);
+                LoadStatus(5);
+                CurrentRoad = 5;
                 return;
             }
 
@@ -71,37 +86,74 @@ public class AutoDrive : MonoBehaviour
             SaveStatus();
             AngleCheck();
             CenterCheck();
-            DisplayUI();
+            //DisplayUI();
             //Debug.Log(DirectionDegree.ToString());
 
             if (DirectionDegree >= MaxDirectionDegree)
             {
                 //Debug.Log("RIGHT");
                 steering = SteeringSimulation("RIGHT");
-                if ((int)m_car.CurrentSpeed == 0)
+                direction = "01";
+                if (m_car.CurrentSpeed < MaxSpeedTable[CurrentRoad] * StopAccelRate)
+                {
                     accel = AccelSimulation("FORWARD");
+                    direction += "10";
+                }
+                else if (m_car.CurrentSpeed > MaxSpeedTable[CurrentRoad])
+                {
+                    accel = AccelSimulation("BACKWARD");
+                    direction += "01";
+                }
                 else
+                {
                     accel = AccelSimulation("NULL");
+                    direction += "00";
+                }
             }
             else if (-DirectionDegree >= MaxDirectionDegree)
             {
                 //Debug.Log("LEFT");
                 steering = SteeringSimulation("LEFT");
-                if ((int)m_car.CurrentSpeed == 0)
+                direction = "10";
+                if (m_car.CurrentSpeed < MaxSpeedTable[CurrentRoad] * StopAccelRate)
+                {
                     accel = AccelSimulation("FORWARD");
+                    direction += "10";
+                }
+                else if (m_car.CurrentSpeed > MaxSpeedTable[CurrentRoad])
+                {
+                    accel = AccelSimulation("BACKWARD");
+                    direction += "01";
+                }
                 else
+                {
                     accel = AccelSimulation("NULL");
+                    direction += "00";
+                }
             }
             else
             {
-                if (m_car.CurrentSpeed < MaxSpeedTable[CurrentRoad] * StopAccelRate)
-                    accel = AccelSimulation("FORWARD");
-                else
-                    accel = AccelSimulation("NULL");
                 steering = SteeringSimulation("NULL");
+                direction = "00";
+                if (m_car.CurrentSpeed < MaxSpeedTable[CurrentRoad] * StopAccelRate)
+                {
+                    accel = AccelSimulation("FORWARD");
+                    direction += "10";
+                }
+                else if (m_car.CurrentSpeed > MaxSpeedTable[CurrentRoad])
+                {
+                    accel = AccelSimulation("BACKWARD");
+                    direction += "01";
+                }
+                else
+                {
+                    accel = AccelSimulation("NULL");
+                    direction += "00";
+                }
             }
 
             m_car.Move(steering, accel, accel, 0f);
+            CurrentRoad = GetCurrentRoad();
         }
     }
 
@@ -110,7 +162,7 @@ public class AutoDrive : MonoBehaviour
         float target = KEY.Equals("FORWARD") ? 1 : (KEY.Equals("BACKWARD") ? -1 : 0);
         accel = Mathf.MoveTowards(accel,
                       target, sensitivity * Time.deltaTime);
-        return (Mathf.Abs(accel) < dead) ? 0f : target * 0.7f;//accel;
+        return (Mathf.Abs(accel) < dead) ? 0f : target * 0.7f;  // accel;
     }
 
     private float SteeringSimulation(string KEY)
@@ -118,7 +170,7 @@ public class AutoDrive : MonoBehaviour
         float target = KEY.Equals("LEFT") ? -1 : KEY.Equals("RIGHT") ? 1 : 0;
         steering = Mathf.MoveTowards(steering,
                       target, sensitivity * Time.deltaTime);
-        return (Mathf.Abs(steering) < dead) ? 0f : target * 0.7f;//steering;
+        return (Mathf.Abs(steering) < dead) ? 0f : target * 0.7f;  // steering;
     }
 
     private int GetCurrentRoad()
@@ -143,7 +195,7 @@ public class AutoDrive : MonoBehaviour
 
     private int CenterCheck()
     {
-        Vector3 RoadScale = GameObject.Find("Button").GetComponent<RoadGenScript>().getScale();
+        Vector3 RoadScale = GameObject.Find("Road").GetComponent<TestDataGen>().getScale();
         GameObject road = GameObject.Find("road (" + (CurrentRoad).ToString() + ")");
         float car_x = m_car.transform.position.x, car_z = m_car.transform.position.z;
         float road_x = road.transform.position.x, road_z = road.transform.position.z;
@@ -156,11 +208,11 @@ public class AutoDrive : MonoBehaviour
             int location = car_x < x ? 1 : -1;
             if (location == 1)
             {
-                DirectionDegree += Mathf.Abs(car_x - x) / 3;
+                DirectionDegree += Mathf.Abs(car_x - x) / 2f;
             }
             else
             {
-                DirectionDegree -= Mathf.Abs(car_x - x) / 3;
+                DirectionDegree -= Mathf.Abs(car_x - x) / 2f;
             }
             if (Mathf.Abs(car_x - x) > CenterOffset)
                 return location;
@@ -174,12 +226,12 @@ public class AutoDrive : MonoBehaviour
             if (location == 1)
             {
                 //Debug.Log("Distance:" + distance);
-                DirectionDegree += distance / 3;
+                DirectionDegree += distance / 2f;
             }
             else
             {
                 //Debug.Log("-Distance:" + distance);
-                DirectionDegree -= distance / 3;
+                DirectionDegree -= distance / 2f;
             }
             if (Mathf.Abs(distance) > CenterOffset)
                 return location;
@@ -191,14 +243,13 @@ public class AutoDrive : MonoBehaviour
     {
         //Debug.Log("CurrentRoad:" + CurrentRoad);
         float CarRot = NormalizeAngle(m_car.transform.eulerAngles.y);
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < 20; i++)
         {
             GameObject road = GameObject.Find("road (" + (CurrentRoad + i).ToString() + ")");
             float RoadRot = NormalizeAngle(road.transform.eulerAngles.y);
             float Angle = (int)(RoadRot - CarRot);
-            int action = (Angle > 0 ? 1 : (Angle == 0 ? 0 : -1));
             if (Mathf.Abs(Angle) > 180)
-                Angle = RoadRot < 0 ? (RoadRot + 360 - CarRot) : (RoadRot - 360 - CarRot);
+                Angle = RoadRot < 0 ? Angle + 360 : Angle - 360;
             if(Angle > 0)
             {
                 //Debug.Log("Angle:" + Angle);
@@ -207,7 +258,11 @@ public class AutoDrive : MonoBehaviour
             {
                 //Debug.Log("-Angle:" + Angle);
             }
-            DirectionDegree += Angle / 90 * ((i >= 0 && i <= 1) ? 5 : (i >= 2 || i <= 4) ? 3 : 2);
+            if(i <= 10)
+                DirectionDegree += Angle / 90 * 0.3f;
+            else if(i < 20)
+                DirectionDegree += Angle / 90 * 0.1f;
+            //DirectionDegree += Angle / 90 * ((i >= 0 && i <= 1) ? 5 : (i >= 2 || i <= 4) ? 3 : 2);
         }
     }
 
@@ -249,9 +304,9 @@ public class AutoDrive : MonoBehaviour
         GameObject.Find("Car").transform.position = new Vector3(status[RoadNum].position.x,
                                                                 status[RoadNum].position.y,
                                                                 status[RoadNum].position.z);
-        GameObject.Find("Car").transform.eulerAngles = new Vector3(status[RoadNum].rotation.x,
-                                                                   status[RoadNum].rotation.y,
-                                                                   status[RoadNum].rotation.z);
+        GameObject.Find("Car").transform.eulerAngles = new Vector3(0, 0, 0);//status[RoadNum].rotation.x,
+                                                                   //status[RoadNum].rotation.y,
+                                                                   //status[RoadNum].rotation.z);
 
     }
 }

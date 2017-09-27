@@ -20,17 +20,21 @@ public class RoadGenScript : MonoBehaviour
     public const float START_ROT_X = 0;
     public const float START_ROT_Y = 0;
     public const float START_ROT_Z = 0;
-    public const float ROT = 5;
+    public const float ROT = 4.9f;
     public const float OVERLAP = 0.5F;
     public const int MAP_SCALE = 500;
     public const int ROLLBACK = 50;
     public const bool SAVE_ROAD = true;
+    public const int ROAD_DIFFICULTY = 3; // (1:Easy 2:Normal 3:Difficult)
 
     public bool isGenFinished = false;
 
     const int ROAD_OCCUPIED_TABLE_SIZE = 100 * (int)(ROAD_SCALE_Z * 50);
 
     bool[,] ROAD_OCCUPIED_TABLE;
+
+    bool isGen = false;
+
     List<List<Vector2>> ROAD_OCCUPIED_LIST;
 
     Vector3 NEXT_POS, NEXT_ROT;
@@ -42,17 +46,21 @@ public class RoadGenScript : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        Button btn = GetComponent<Button>();
-        btn.onClick.AddListener(delegate
-        {
-            ClickBtn();
-        });
+        //Button btn = GetComponent<Button>();
+        //btn.onClick.AddListener(delegate
+        //{
+        //    ClickBtn();
+        //});
     }
 
     // Update is called once per frame
     void Update()
     {
-
+        if (!isGen)
+        {
+            ClickBtn();
+            isGen = true;
+        }
     }
 
     public void ClickBtn()
@@ -120,6 +128,14 @@ public class RoadGenScript : MonoBehaviour
                 road = GameObject.Find("road (" + i.ToString() + ")");
                 plane = GameObject.Find("plane (" + i.ToString() + ")");
             }
+        }
+
+        for(int i = 0; i < 20; i++)
+        {
+            road = GameObject.Find("road (" + (ROAD_COUNT + i).ToString() + ")");
+            plane = GameObject.Find("plane (" + (ROAD_COUNT + i).ToString() + ")");
+            road.transform.position = new Vector3(0, 0, 0);
+            plane.transform.position = new Vector3(0, 0, 0);
         }
     }
 
@@ -281,16 +297,22 @@ public class RoadGenScript : MonoBehaviour
     {
         List<Vector2> NewRandList = new List<Vector2>();
         int direction, count, j = 0;
+        int dRate = ROAD_DIFFICULTY == 3 ? 5 : (ROAD_DIFFICULTY == 2 ? 7 : 9);
         for (int i = 0; i < randIndex; i++)
         {
             j += (int)RandList[i].y;
             NewRandList.Add(RandList[i]);
         }
+        if (randIndex == 0)
+        {
+            NewRandList.Add(new Vector2(0, 10));
+            j += 10;
+        }
         for (; j < ROAD_COUNT;)
         {
-            direction = Random.Range(0, 8);
-            count = Random.Range(1, 20);
-            if (direction < 6)
+            direction = Random.Range(0, dRate);
+            count = Random.Range(5, 20);
+            if (direction < dRate - 2)
             {
                 j += count;
                 if (j >= ROAD_COUNT)
@@ -302,16 +324,22 @@ public class RoadGenScript : MonoBehaviour
             }
             else
             {
-                if(NewRandList.Count > 0)
-                    if (NewRandList[NewRandList.Count - 1].x == (direction - 5))
-                        direction = direction - 5 == 1 ? 2 : 1;
+                direction = direction - 2;
+                if (NewRandList.Count > 0)
+                    if (NewRandList[NewRandList.Count - 1].x == direction)
+                    {
+                        if (Random.Range(0, 2) == 1)
+                            direction = direction == 1 ? 2 : 1;
+                        else
+                            direction = 0;
+                    }
                 j += count;
                 if (j >= ROAD_COUNT)
                 {
                     count = count - j + ROAD_COUNT - 1;
                     j = ROAD_COUNT;
                 }
-                NewRandList.Add(new Vector2(direction - 5, count));
+                NewRandList.Add(new Vector2(direction, count));
             }
         }
         RandList = NewRandList;
@@ -323,12 +351,11 @@ public class RoadGenScript : MonoBehaviour
             GameObject.Find("Car").GetComponent<point>().plane_check[i] = false;
         GameObject.Find("Car").GetComponent<point>().point1 = 0;
         GameObject.Find("Car").GetComponent<point>().point2 = 0;
-        GameObject.Find("Canvas/Text").GetComponent<Text>().text = "Score : 0";
 
         updateRand(0);
 
         ROAD_OCCUPIED_LIST = new List<List<Vector2>>();
-        for (int i = 0; i <= ROAD_COUNT; i++)
+        for (int i = 0; i <= ROAD_COUNT + 20; i++)
         {
             ROAD_OCCUPIED_LIST.Add(new List<Vector2>());
         }
