@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine;
 using UnityStandardAssets.Vehicles.Car;
+using System.Net.Sockets;
+using System.Threading;
+using System.Net;
+using System.Text;
 
 
 public class RoadGenScript : MonoBehaviour
@@ -25,7 +29,7 @@ public class RoadGenScript : MonoBehaviour
     public const int MAP_SCALE = 500;
     public const int ROLLBACK = 50;
     public const bool SAVE_ROAD = true;
-    public const int ROAD_DIFFICULTY = 3; // (1:Easy 2:Normal 3:Difficult)
+    public const int ROAD_DIFFICULTY = 1; // (1:Easy 2:Normal 3:Difficult)
 
     public bool isGenFinished = false;
 
@@ -34,6 +38,7 @@ public class RoadGenScript : MonoBehaviour
     bool[,] ROAD_OCCUPIED_TABLE;
 
     bool isGen = false;
+    int screanShotCnt = 0;
 
     List<List<Vector2>> ROAD_OCCUPIED_LIST;
 
@@ -41,16 +46,10 @@ public class RoadGenScript : MonoBehaviour
 
     List<Vector2> RandList;
 
-
-
     // Use this for initialization
     void Start()
     {
-        //Button btn = GetComponent<Button>();
-        //btn.onClick.AddListener(delegate
-        //{
-        //    ClickBtn();
-        //});
+
     }
 
     // Update is called once per frame
@@ -66,7 +65,7 @@ public class RoadGenScript : MonoBehaviour
     public void ClickBtn()
     {
         isGenFinished = false;
-        
+
         initVar();
 
         RoadGen();
@@ -76,6 +75,7 @@ public class RoadGenScript : MonoBehaviour
                                                             0.3075473F,
                                                             GameObject.Find("road (5)").transform.position.z);
         GameObject.Find("Car").transform.rotation = GameObject.Find("road (5)").transform.rotation;
+
 
         isGenFinished = true;
     }
@@ -130,7 +130,7 @@ public class RoadGenScript : MonoBehaviour
             }
         }
 
-        for(int i = 0; i < 20; i++)
+        for (int i = 0; i < 20; i++)
         {
             road = GameObject.Find("road (" + (ROAD_COUNT + i).ToString() + ")");
             plane = GameObject.Find("plane (" + (ROAD_COUNT + i).ToString() + ")");

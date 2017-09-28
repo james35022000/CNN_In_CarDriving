@@ -36,21 +36,7 @@ namespace UnityStandardAssets.Vehicles.Car
         [SerializeField] private float m_RevRangeBoundary = 1f;
         [SerializeField] private float m_SlipLimit;
         [SerializeField] private float m_BrakeTorque;
-
-        public struct CarStatus
-        {
-            public WheelCollider[] m_WheelColliders;
-            public Quaternion[] m_WheelMeshLocalRotations;
-            public Vector3 m_Prevpos, m_Pos;
-            public float m_SteerAngle;
-            public int m_GearNum;
-            public float m_GearFactor;
-            public float m_OldRotation;
-            public float m_CurrentTorque;
-            public Vector3 Velocity;
-            public Vector3 AngularVelocity;
-        }
-
+        
         private Quaternion[] m_WheelMeshLocalRotations;
         private Vector3 m_Prevpos, m_Pos;
         private float m_SteerAngle;
@@ -381,60 +367,10 @@ namespace UnityStandardAssets.Vehicles.Car
         public void ResetCar()
         {
             Skidding = false;
-            m_Rigidbody.velocity = new Vector3();
-            m_SteerAngle = 0;
-        }
-
-        public CarStatus SaveCarStatus()
-        {
-            CarStatus carStatus;
-            carStatus.m_WheelColliders = new WheelCollider[4];
-            carStatus.m_WheelColliders[0] = m_WheelColliders[0];
-            carStatus.m_WheelColliders[1] = m_WheelColliders[1];
-            carStatus.m_WheelColliders[2] = m_WheelColliders[2];
-            carStatus.m_WheelColliders[3] = m_WheelColliders[3];
-            carStatus.m_CurrentTorque = m_CurrentTorque;
-            carStatus.m_GearFactor = m_GearFactor;
-            carStatus.m_GearNum = m_GearNum;
-            carStatus.m_OldRotation = m_OldRotation;
-            carStatus.m_Pos = m_Pos;
-            carStatus.m_Prevpos = m_Prevpos;
-            carStatus.Velocity = new Vector3(m_Rigidbody.velocity.x, m_Rigidbody.velocity.y, m_Rigidbody.velocity.z);
-            carStatus.AngularVelocity = new Vector3(m_Rigidbody.angularVelocity.x, m_Rigidbody.angularVelocity.y, m_Rigidbody.angularVelocity.z);
-            carStatus.m_SteerAngle = m_SteerAngle;
-            carStatus.m_WheelMeshLocalRotations = new Quaternion[4];
-            carStatus.m_WheelMeshLocalRotations[0] = m_WheelMeshLocalRotations[0];
-            carStatus.m_WheelMeshLocalRotations[1] = m_WheelMeshLocalRotations[1];
-            carStatus.m_WheelMeshLocalRotations[2] = m_WheelMeshLocalRotations[2];
-            carStatus.m_WheelMeshLocalRotations[3] = m_WheelMeshLocalRotations[3];
-            return carStatus;
-        }
-
-        public void LoadCarStatus(CarStatus carStatus)
-        {
-            m_WheelColliders[0] = carStatus.m_WheelColliders[0];
-            m_WheelColliders[1] = carStatus.m_WheelColliders[1];
-            m_WheelColliders[2] = carStatus.m_WheelColliders[2];
-            m_WheelColliders[3] = carStatus.m_WheelColliders[3];
-            m_WheelColliders[0].attachedRigidbody.centerOfMass = m_CentreOfMassOffset;
-
-            m_MaxHandbrakeTorque = float.MaxValue;
-            
-
-            m_CurrentTorque = carStatus.m_CurrentTorque;
-            m_GearFactor = carStatus.m_GearFactor;
-            m_GearNum = carStatus.m_GearNum;
-            m_OldRotation = carStatus.m_OldRotation;
-            m_Pos = carStatus.m_Pos;
-            m_Prevpos = carStatus.m_Prevpos;
             m_Rigidbody.velocity = new Vector3(0, 0, 0);//carStatus.Velocity;
             m_Rigidbody.angularVelocity = new Vector3(0, 0, 0);//carStatus.AngularVelocity;
             m_Rigidbody.ResetInertiaTensor();
-            m_SteerAngle = carStatus.m_SteerAngle;
-            m_WheelMeshLocalRotations[0] = carStatus.m_WheelMeshLocalRotations[0];
-            m_WheelMeshLocalRotations[1] = carStatus.m_WheelMeshLocalRotations[1];
-            m_WheelMeshLocalRotations[2] = carStatus.m_WheelMeshLocalRotations[2];
-            m_WheelMeshLocalRotations[3] = carStatus.m_WheelMeshLocalRotations[3];
+            m_SteerAngle = 0;
         }
     }
 }

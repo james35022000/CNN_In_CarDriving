@@ -5,13 +5,6 @@ using UnityStandardAssets.Vehicles.Car;
 
 public class AutoDrive : MonoBehaviour
 {
-    public struct Status
-    {
-        public CarController.CarStatus carStatus;
-        public Vector3 position;
-        public Vector3 rotation;
-    }
-
     private const float SpeedSensitivity = 10f;
     private const int RoadCount = 500;
     private const float InitMaxSpeed = 40f;
@@ -34,14 +27,12 @@ public class AutoDrive : MonoBehaviour
     private float dead = 0.001f;
 
     public string direction = "0000"; // left, right, forward, backward
-
-    private Status[] status = new Status[RoadCount];
+    
+    public bool training = false;
 
     // Use this for initialization
     void Start()
     {
-        for (int i = 0; i < RoadCount + 100; i++)
-            MaxSpeedTable[i] = InitMaxSpeed;
         m_car = GameObject.Find("Car").GetComponent<CarController>();
     }
 
@@ -57,33 +48,31 @@ public class AutoDrive : MonoBehaviour
         {
             if (CurrentRoad >= RoadCount - 20)
             {
-                for (int i = 0; i < RoadCount + 100; i++)
-                    MaxSpeedTable[i] = InitMaxSpeed;
+                Time.timeScale = 0;
+                while (training) ;
+                Time.timeScale = 1;
                 GameObject.Find("Road").GetComponent<TestDataGen>().SendTestData();
                 GameObject.Find("Road").GetComponent<TestDataGen>().ClickBtn();
                 return;
             }
-            if(OutsideCheck())
+            if (OutsideCheck())
             {
                 GameObject.Find("Road").GetComponent<TestDataGen>().ResetTestData();
                 if (m_car.CurrentSpeed <= 10f)
                 {
-                    for (int i = 0; i < RoadCount + 100; i++)
-                        MaxSpeedTable[i] = InitMaxSpeed;
                     GameObject.Find("Road").GetComponent<TestDataGen>().ClickBtn();
                     return;
                 }
                 int cnt = CurrentRoad >= 70 ? 70 : CurrentRoad;
                 for (int i = CurrentRoad - cnt; i < CurrentRoad + 20; i++)
                     MaxSpeedTable[i] = m_car.CurrentSpeed - (5f);
-                LoadStatus(5);
+                ResetCar();
                 CurrentRoad = 5;
                 return;
             }
 
             DirectionDegree = 0;
-
-            SaveStatus();
+            
             AngleCheck();
             CenterCheck();
             //DisplayUI();
@@ -155,6 +144,8 @@ public class AutoDrive : MonoBehaviour
             m_car.Move(steering, accel, accel, 0f);
             CurrentRoad = GetCurrentRoad();
         }
+        else
+            m_car.GetComponent<CarController>().ResetCar();
     }
 
     private float AccelSimulation(string KEY)
@@ -290,24 +281,20 @@ public class AutoDrive : MonoBehaviour
             LeftRate.transform.position = new Vector3(400 + 75 * DirectionDegree/8, 750, 0);
         }
     }
-
-    private void SaveStatus()
+    public void ResetCar()
     {
-        status[CurrentRoad].carStatus = GameObject.Find("Car").GetComponent<CarController>().SaveCarStatus();
-        status[CurrentRoad].position = GameObject.Find("Car").transform.position;
-        status[CurrentRoad].rotation = GameObject.Find("Car").transform.eulerAngles;
+        GameObject.Find("Car").GetComponent<CarController>().ResetCar();
+        GameObject.Find("Car").transform.position = new Vector3(
+                                                            GameObject.Find("road (5)").transform.position.x,
+                                                            0.3075473F,
+                                                            GameObject.Find("road (5)").transform.position.z);
+        GameObject.Find("Car").transform.rotation = GameObject.Find("road (5)").transform.rotation;
     }
 
-    private void LoadStatus(int RoadNum)
+    public void ResetSpeed()
     {
-        GameObject.Find("Car").GetComponent<CarController>().LoadCarStatus(status[RoadNum].carStatus);
-        GameObject.Find("Car").transform.position = new Vector3(status[RoadNum].position.x,
-                                                                status[RoadNum].position.y,
-                                                                status[RoadNum].position.z);
-        GameObject.Find("Car").transform.eulerAngles = new Vector3(0, 0, 0);//status[RoadNum].rotation.x,
-                                                                   //status[RoadNum].rotation.y,
-                                                                   //status[RoadNum].rotation.z);
-
+        for (int i = 0; i < RoadCount + 100; i++)
+            MaxSpeedTable[i] = InitMaxSpeed;
     }
 }
 

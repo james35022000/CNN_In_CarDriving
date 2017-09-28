@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine;
 using UnityStandardAssets.Vehicles.Car;
+using System.Net.Sockets;
+using System.Threading;
+using System.Net;
+using System.Text;
 
 
 public class TestDataGen : MonoBehaviour
@@ -25,7 +29,7 @@ public class TestDataGen : MonoBehaviour
     public const int MAP_SCALE = 500;
     public const int ROLLBACK = 50;
     public const bool SAVE_ROAD = true;
-    public const int ROAD_DIFFICULTY = 3; // (1:Easy 2:Normal 3:Difficult)
+    public int ROAD_DIFFICULTY = 3; // (1:Easy 2:Normal 3:Difficult)
 
     public bool isGenFinished = false;
 
@@ -45,12 +49,21 @@ public class TestDataGen : MonoBehaviour
     
     private int width = Screen.width;
     private int height = Screen.height;
-    private TestData[] testData;
+    private TestData[] testData, sendTestData;
     public int testDataCnt;
+
+    static Socket listener;
+    static string LocalHost = "192.168.1.35";
+    static int port = 8787;
+    static string data = null;
+    bool isFinish = false;
 
     Texture2D texture2d;
 
-    public class TestData
+    AutoDrive autoDrive;
+    CarController carController;
+
+    private class TestData
     {
         public TestData(byte[] screenShot, string direction, float speed)
         {
@@ -69,12 +82,24 @@ public class TestDataGen : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-
+        (new Thread(ServerListening)).Start();
+        autoDrive = GameObject.Find("Car").GetComponent<AutoDrive>();
+        carController = GameObject.Find("Car").GetComponent<CarController>();
     }
 
     // Update is called once per frame
     void Update()
     {
+        if(Input.GetKeyDown(KeyCode.R))
+        {
+            ClickBtn();
+            screanShotCnt = 1;
+        }
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            isFinish = true;
+            Application.Quit();
+        }
         if (!isGen)
         {
             ClickBtn();
@@ -95,14 +120,7 @@ public class TestDataGen : MonoBehaviour
 
     public void SendTestData()
     {
-        /*for(int i = 0; i < 400; i++)
-        {
-            if (testData[i] == null) break;
-            testData[i].screenShot = null;
-        }
-        testData = null;
-        System.GC.Collect();*/
-        GameObject.Find("Road").GetComponent<ConnectToPython>().AddTestData(testData);
+        sendTestData = testData;
         ResetTestData();
     }
 
@@ -128,19 +146,84 @@ public class TestDataGen : MonoBehaviour
         testData[testDataCnt] = null;
     }
 
+    private void ServerListening()
+    {
+        sendTestData = null;
+        while (true)
+        {
+            listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            try
+            {
+                listener.Bind(new IPEndPoint(IPAddress.Parse(LocalHost), port));
+                listener.Listen(100);
+                while (true)
+                {
+                    Debug.Log("Waiting for client connect.");
+                    Socket handler = listener.Accept();
+                    byte[] bytes = new byte[1024];
+                    int count = handler.Receive(bytes);
+                    data = Encoding.ASCII.GetString(bytes, 0, count);
+                    if (data == "CNN_CarDriving_Client")
+                    {
+                        Debug.Log("Connect!");
+                        while (true)
+                        {
+                            if (isFinish)
+                            {
+                                handler.Send(new byte[2]);
+                                return;
+                            }
+                            if (sendTestData != null)
+                            {
+                                for (int i = 0; i < 400; i++)
+                                {
+                                    if (sendTestData[i] == null)
+                                    {
+                                        // Using for online training.
+                                        handler.Send(new byte[1]);
+                                        autoDrive.training = true;
+                                        Debug.Log("Waiting for training.");
+                                        handler.Receive(bytes);
+                                        autoDrive.training = false;
+                                        Debug.Log("Finish.");
+                                        // --------------------------
+                                        break;
+                                    }
+                                    handler.Send(sendTestData[i].screenShot);
+                                    sendTestData[i].screenShot = null;
+                                    handler.Receive(bytes);
+                                    handler.Send(Encoding.ASCII.GetBytes(sendTestData[i].speed + " " + sendTestData[i].direction));
+                                    handler.Receive(bytes);
+                                    sendTestData[i] = null;
+                                }
+                                sendTestData = null;
+                                System.GC.Collect();
+                            }
+                        }
+                    }
+                    handler.Shutdown(SocketShutdown.Both);
+                    handler.Close();
+                }
+            }
+            catch (System.Exception e)
+            {
+                listener.Shutdown(SocketShutdown.Both);
+                listener.Close();
+                Debug.Log(e.Message.ToString());
+            }
+        }
+    }
+
     public void ClickBtn()
     {
+        ROAD_DIFFICULTY = Random.Range(1, 3);
         isGenFinished = false;
 
         initVar();
 
         RoadGen();
-        GameObject.Find("Car").GetComponent<CarController>().ResetCar();
-        GameObject.Find("Car").transform.position = new Vector3(
-                                                            GameObject.Find("road (5)").transform.position.x,
-                                                            0.3075473F,
-                                                            GameObject.Find("road (5)").transform.position.z);
-        GameObject.Find("Car").transform.rotation = GameObject.Find("road (5)").transform.rotation;
+        GameObject.Find("Car").GetComponent<AutoDrive>().ResetCar();
+        GameObject.Find("Car").GetComponent<AutoDrive>().ResetSpeed();
 
         ResetTestData();
 
