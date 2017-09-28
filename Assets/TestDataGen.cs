@@ -462,7 +462,7 @@ public class TestDataGen : MonoBehaviour
         {
             direction = Random.Range(0, dRate);
             count = Random.Range(5, 20);
-            if (direction < dRate - 2)
+            if (direction > 1)
             {
                 j += count;
                 if (j >= ROAD_COUNT)
@@ -474,11 +474,11 @@ public class TestDataGen : MonoBehaviour
             }
             else
             {
-                direction = direction - 2;
+                direction++;
                 if (NewRandList.Count > 0)
                     if (NewRandList[NewRandList.Count - 1].x == direction)
                     {
-                        if (Random.Range(0, 2) == 1)
+                        if (Random.Range(0, 1) == 1)
                             direction = direction == 1 ? 2 : 1;
                         else
                             direction = 0;
