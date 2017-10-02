@@ -6,7 +6,7 @@ using UnityStandardAssets.Vehicles.Car;
 public class AutoDrive : MonoBehaviour
 {
     private const float SpeedSensitivity = 10f;
-    private const int RoadCount = 500;
+    private const int RoadCount = 200;
     private const float InitMaxSpeed = 40f;
     private const float StopAccelRate = 0.8f;
     private const float PreviewRate = 0.3f;
@@ -46,11 +46,11 @@ public class AutoDrive : MonoBehaviour
     {
         if (GameObject.Find("Road").GetComponent<TestDataGen>().isGenFinished == true)
         {
-            if (CurrentRoad >= RoadCount - 20)
+            if (CurrentRoad >= RoadCount - 15)
             {
                 Time.timeScale = 0;
                 while (training) ;
-                Time.timeScale = 1;
+                Time.timeScale = 1f;
                 GameObject.Find("Road").GetComponent<TestDataGen>().SendTestData();
                 GameObject.Find("Road").GetComponent<TestDataGen>().ClickBtn();
                 return;

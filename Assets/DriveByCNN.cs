@@ -59,7 +59,11 @@ public class DriveByCNN : MonoBehaviour
         //screanShotCnt++;
         ControlCar(data);
         if (CurrentRoad >= 490)
+        {
             GameObject.Find("Road").GetComponent<RoadGenScript>().ClickBtn();
+            CurrentRoad = 11;
+        }
+            
         CurrentRoad = GetCurrentRoad();
     }
     
@@ -77,23 +81,18 @@ public class DriveByCNN : MonoBehaviour
                     Debug.Log("Waiting for client connect.");
                     Socket handler = listener.Accept();
                     byte[] bytes = new byte[1024];
-                    int count = handler.Receive(bytes);
-                    data = Encoding.ASCII.GetString(bytes, 0, count);
-                    if (data == "CNN_CarDriving_Client")
+                    int count;
+                    Debug.Log("Connect!");
+                    while (true)
                     {
-                        Debug.Log("Connect!");
-                        while (true)
-                        {
-                            Thread.Sleep(100);
-                            handler.Send(carData.screenShot);
-                            carData.screenShot = null;
-                            //Thread.Sleep(50);
-                            handler.Receive(bytes);
-                            handler.Send(Encoding.ASCII.GetBytes(carData.speed + ""));
-                            count = handler.Receive(bytes);
-                            data = Encoding.ASCII.GetString(bytes, 0, count);
-                            Debug.Log(carData.speed + " : " + data);
-                        }
+                        Thread.Sleep(100);
+                        handler.Send(carData.screenShot);
+                        carData.screenShot = null;
+                        handler.Receive(bytes);
+                        handler.Send(Encoding.ASCII.GetBytes(carData.speed + ""));
+                        count = handler.Receive(bytes);
+                        data = Encoding.ASCII.GetString(bytes, 0, count);
+                        Debug.Log(carData.speed + " : " + data);
                     }
                     handler.Shutdown(SocketShutdown.Both);
                     handler.Close();
@@ -128,29 +127,7 @@ public class DriveByCNN : MonoBehaviour
         {
             accel = AccelSimulation("BACKWARD");
         }
-
         m_car.Move(steering, accel, accel, 0f);
-        /*switch(direction)
-        {
-            case "0000":
-                break;
-            case "0001":
-                break;
-            case "0010":
-                break;
-            case "0100":
-                break;
-            case "1000":
-                break;
-            case "0101":
-                break;
-            case "1001":
-                break;
-            case "0110":
-                break;
-            case "1010":
-                break;
-        }*/
     }
 
     private int GetCurrentRoad()

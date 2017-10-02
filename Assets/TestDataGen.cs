@@ -13,7 +13,7 @@ public class TestDataGen : MonoBehaviour
 {
 
     //const string ROAD_NAME = "road";
-    public const int ROAD_COUNT = 500;
+    public const int ROAD_COUNT = 200;
 
     public const float ROAD_SCALE_X = 8;
     public const float ROAD_SCALE_Y = 0.5F;
@@ -105,7 +105,7 @@ public class TestDataGen : MonoBehaviour
             ClickBtn();
             isGen = true;
         }
-        if(screanShotCnt % 6 == 0)
+        //if(screanShotCnt % 3 == 0)
             StartCoroutine(ScreenShot());
         screanShotCnt++;
     }
@@ -161,48 +161,50 @@ public class TestDataGen : MonoBehaviour
                     Debug.Log("Waiting for client connect.");
                     Socket handler = listener.Accept();
                     byte[] bytes = new byte[1024];
-                    int count = handler.Receive(bytes);
-                    data = Encoding.ASCII.GetString(bytes, 0, count);
-                    if (data == "CNN_CarDriving_Client")
+                    Debug.Log("Connect!");
+                    while (true)
                     {
-                        Debug.Log("Connect!");
-                        while (true)
+                        if (isFinish)
                         {
-                            if (isFinish)
+                            handler.Send(new byte[2]);
+                            return;
+                        }
+                        if (sendTestData != null)
+                        {
+                            for (int i = 0; i < 400; i++)
                             {
-                                handler.Send(new byte[2]);
-                                return;
-                            }
-                            if (sendTestData != null)
-                            {
-                                for (int i = 0; i < 400; i++)
+                                if (sendTestData[i] == null)
                                 {
-                                    if (sendTestData[i] == null)
+                                    // Using for online training.
+                                    handler.Send(new byte[1]);
+                                    autoDrive.training = true;
+                                    Debug.Log("Waiting for training.");
+                                    if (handler.Receive(bytes) == 1)
                                     {
-                                        // Using for online training.
-                                        handler.Send(new byte[1]);
-                                        autoDrive.training = true;
-                                        Debug.Log("Waiting for training.");
-                                        handler.Receive(bytes);
+                                        handler.Shutdown(SocketShutdown.Both);
+                                        handler.Close();
+                                        handler = null;
                                         autoDrive.training = false;
-                                        Debug.Log("Finish.");
-                                        // --------------------------
                                         break;
                                     }
-                                    handler.Send(sendTestData[i].screenShot);
-                                    sendTestData[i].screenShot = null;
-                                    handler.Receive(bytes);
-                                    handler.Send(Encoding.ASCII.GetBytes(sendTestData[i].speed + " " + sendTestData[i].direction));
-                                    handler.Receive(bytes);
-                                    sendTestData[i] = null;
+                                    autoDrive.training = false;
+                                    Debug.Log("Finish.");
+                                    // --------------------------
+                                    break;
                                 }
-                                sendTestData = null;
-                                System.GC.Collect();
+                                handler.Send(sendTestData[i].screenShot);
+                                sendTestData[i].screenShot = null;
+                                handler.Receive(bytes);
+                                handler.Send(Encoding.ASCII.GetBytes(sendTestData[i].speed + " " + sendTestData[i].direction));
+                                handler.Receive(bytes);
+                                sendTestData[i] = null;
                             }
+                            sendTestData = null;
+                            System.GC.Collect();
+                            if (handler == null) break;
                         }
+
                     }
-                    handler.Shutdown(SocketShutdown.Both);
-                    handler.Close();
                 }
             }
             catch (System.Exception e)
@@ -216,7 +218,7 @@ public class TestDataGen : MonoBehaviour
 
     public void ClickBtn()
     {
-        ROAD_DIFFICULTY = Random.Range(1, 3);
+        //ROAD_DIFFICULTY = Random.Range(1, 3);
         isGenFinished = false;
 
         initVar();

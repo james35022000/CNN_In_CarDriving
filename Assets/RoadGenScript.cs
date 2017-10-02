@@ -29,7 +29,7 @@ public class RoadGenScript : MonoBehaviour
     public const int MAP_SCALE = 500;
     public const int ROLLBACK = 50;
     public const bool SAVE_ROAD = true;
-    public const int ROAD_DIFFICULTY = 1; // (1:Easy 2:Normal 3:Difficult)
+    public int ROAD_DIFFICULTY = 3; // (1:Easy 2:Normal 3:Difficult)
 
     public bool isGenFinished = false;
 
@@ -38,7 +38,6 @@ public class RoadGenScript : MonoBehaviour
     bool[,] ROAD_OCCUPIED_TABLE;
 
     bool isGen = false;
-    int screanShotCnt = 0;
 
     List<List<Vector2>> ROAD_OCCUPIED_LIST;
 
@@ -55,6 +54,14 @@ public class RoadGenScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            ClickBtn();
+        }
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Application.Quit();
+        }
         if (!isGen)
         {
             ClickBtn();
@@ -65,10 +72,11 @@ public class RoadGenScript : MonoBehaviour
     public void ClickBtn()
     {
         isGenFinished = false;
-
+        
         initVar();
 
         RoadGen();
+
         GameObject.Find("Car").GetComponent<CarController>().ResetCar();
         GameObject.Find("Car").transform.position = new Vector3(
                                                             GameObject.Find("road (5)").transform.position.x,
@@ -312,7 +320,7 @@ public class RoadGenScript : MonoBehaviour
         {
             direction = Random.Range(0, dRate);
             count = Random.Range(5, 20);
-            if (direction < dRate - 2)
+            if (direction > 1)
             {
                 j += count;
                 if (j >= ROAD_COUNT)
@@ -324,11 +332,11 @@ public class RoadGenScript : MonoBehaviour
             }
             else
             {
-                direction = direction - 2;
+                direction++;
                 if (NewRandList.Count > 0)
                     if (NewRandList[NewRandList.Count - 1].x == direction)
                     {
-                        if (Random.Range(0, 2) == 1)
+                        if (Random.Range(0, 1) == 1)
                             direction = direction == 1 ? 2 : 1;
                         else
                             direction = 0;

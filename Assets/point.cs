@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class point : MonoBehaviour {
     
-	public int num_plane = 500;
+	public int num_plane = 200;
 
 	//public
 	public int point1;
