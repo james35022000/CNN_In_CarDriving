@@ -6,7 +6,7 @@ using UnityStandardAssets.Vehicles.Car;
 public class AutoDrive : MonoBehaviour
 {
     private const float SpeedSensitivity = 10f;
-    private const int RoadCount = 200;
+    public int RoadCount = 200;
     private const float InitMaxSpeed = 40f;
     private const float StopAccelRate = 0.8f;
     private const float PreviewRate = 0.3f;
@@ -16,7 +16,7 @@ public class AutoDrive : MonoBehaviour
     private CarController m_car;
 
     public int CurrentRoad = 11;
-    private float[] MaxSpeedTable = new float[RoadCount + 100];
+    private float[] MaxSpeedTable;
     private int PreviewCount = 0;
     private float DirectionDegree = 0;
     private float MaxDirectionDegree = 0.2f;
@@ -33,6 +33,7 @@ public class AutoDrive : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        MaxSpeedTable = new float[RoadCount + 100];
         m_car = GameObject.Find("Car").GetComponent<CarController>();
     }
 

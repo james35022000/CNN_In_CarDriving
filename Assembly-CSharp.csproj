@@ -47,7 +47,7 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\AutoDrive.cs" />
-     <Compile Include="Assets\DriveByCNN.cs" />
+     <Compile Include="Assets\DriveByDQN.cs" />
      <Compile Include="Assets\PlaneTrigger.cs" />
      <Compile Include="Assets\RoadGenScript.cs" />
      <Compile Include="Assets\TestDataGen.cs" />

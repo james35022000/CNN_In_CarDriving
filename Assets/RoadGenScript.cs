@@ -11,25 +11,23 @@ using System.Text;
 
 public class RoadGenScript : MonoBehaviour
 {
-
-    //const string ROAD_NAME = "road";
-    public const int ROAD_COUNT = 500;
+    public int ROAD_COUNT = 500;
 
     public const float ROAD_SCALE_X = 8;
     public const float ROAD_SCALE_Y = 0.5F;
     public const float ROAD_SCALE_Z = 1.25F;
-    public const float START_POS_X = ROAD_SCALE_X / 2 + 250;
-    public const float START_POS_Y = 0;
-    public const float START_POS_Z = ROAD_SCALE_Z / 2 + 250;
-    public const float START_ROT_X = 0;
-    public const float START_ROT_Y = 0;
-    public const float START_ROT_Z = 0;
-    public const float ROT = 4.9f;
-    public const float OVERLAP = 0.5F;
+    public float START_POS_X = ROAD_SCALE_X / 2 + 250;
+    public float START_POS_Y = 0;
+    public float START_POS_Z = ROAD_SCALE_Z / 2 + 250;
+    public float START_ROT_X = 0;
+    public float START_ROT_Y = 0;
+    public float START_ROT_Z = 0;
+    public float ROT = 4.9f;
+    public float OVERLAP = 0.5F;
     public const int MAP_SCALE = 500;
     public const int ROLLBACK = 50;
-    public const bool SAVE_ROAD = true;
-    public int ROAD_DIFFICULTY = 3; // (1:Easy 2:Normal 3:Difficult)
+    public bool SAVE_ROAD = false;  // not available now
+    public int ROAD_DIFFICULTY = 1; // (1:Easy 2:Normal 3:Difficult)
 
     public bool isGenFinished = false;
 
@@ -90,12 +88,12 @@ public class RoadGenScript : MonoBehaviour
 
     void RoadGen()
     {
-        GameObject road, plane;
+        GameObject road;//, plane;
         Vector2 rand = new Vector2();
 
         int RollBackCount = 1, LastRollBackIndex = 0, randIndex = 0;
         road = GameObject.Find("road (1)");
-        plane = GameObject.Find("plane (1)");
+        //plane = GameObject.Find("plane (1)");
         for (int i = 1; i < ROAD_COUNT;)
         {
             rand = RandList[randIndex++];
@@ -112,7 +110,7 @@ public class RoadGenScript : MonoBehaviour
                 i = index + 1;
                 LastRollBackIndex = getRandIndex(getRoadNum(road));
                 road = GameObject.Find("road (" + (index + 1).ToString() + ")");
-                plane = GameObject.Find("plane (" + (index + 1).ToString() + ")");
+                //plane = GameObject.Find("plane (" + (index + 1).ToString() + ")");
             }
             else
             {
@@ -124,26 +122,26 @@ public class RoadGenScript : MonoBehaviour
                     NEXT_ROT.y = (rand.x == 0 ? NEXT_ROT.y : (rand.x == 1 ? NEXT_ROT.y + ROT : NEXT_ROT.y - ROT));
                     NEXT_POS = new Vector3(NEXT_POS.x + OVERLAP * Mathf.Sin(NEXT_ROT.y * Mathf.PI / 180), NEXT_POS.y, NEXT_POS.z + OVERLAP * Mathf.Sin((90 - NEXT_ROT.y) * Mathf.PI / 180));
                     road = GameObject.Find("road (" + (i + k).ToString() + ")");
-                    plane = GameObject.Find("plane (" + (i + k).ToString() + ")");
+                    //plane = GameObject.Find("plane (" + (i + k).ToString() + ")");
                     road.transform.localScale = new Vector3(ROAD_SCALE_X, ROAD_SCALE_Y, ROAD_SCALE_Z);
                     road.transform.position = NEXT_POS;
                     road.transform.eulerAngles = NEXT_ROT;
-                    plane.transform.position = NEXT_POS;
-                    plane.transform.eulerAngles = new Vector3(90, NEXT_ROT.y, 0);
+                    //plane.transform.position = NEXT_POS;
+                    //plane.transform.eulerAngles = new Vector3(90, NEXT_ROT.y, 0);
                     MarkTable(road);
                 }
                 i += (int)rand.y;
                 road = GameObject.Find("road (" + i.ToString() + ")");
-                plane = GameObject.Find("plane (" + i.ToString() + ")");
+                //plane = GameObject.Find("plane (" + i.ToString() + ")");
             }
         }
 
         for (int i = 0; i < 20; i++)
         {
             road = GameObject.Find("road (" + (ROAD_COUNT + i).ToString() + ")");
-            plane = GameObject.Find("plane (" + (ROAD_COUNT + i).ToString() + ")");
+            //plane = GameObject.Find("plane (" + (ROAD_COUNT + i).ToString() + ")");
             road.transform.position = new Vector3(0, 0, 0);
-            plane.transform.position = new Vector3(0, 0, 0);
+            //plane.transform.position = new Vector3(0, 0, 0);
         }
     }
 
@@ -319,7 +317,7 @@ public class RoadGenScript : MonoBehaviour
         for (; j < ROAD_COUNT;)
         {
             direction = Random.Range(0, dRate);
-            count = Random.Range(5, 20);
+            count = Random.Range(5, 10);
             if (direction > 1)
             {
                 j += count;
@@ -355,10 +353,10 @@ public class RoadGenScript : MonoBehaviour
 
     void initVar()
     {
-        for (int i = 1; i < GameObject.Find("Car").GetComponent<point>().num_plane; i++)
-            GameObject.Find("Car").GetComponent<point>().plane_check[i] = false;
-        GameObject.Find("Car").GetComponent<point>().point1 = 0;
-        GameObject.Find("Car").GetComponent<point>().point2 = 0;
+        //for (int i = 1; i < GameObject.Find("Car").GetComponent<point>().num_plane; i++)
+        //    GameObject.Find("Car").GetComponent<point>().plane_check[i] = false;
+        //GameObject.Find("Car").GetComponent<point>().point1 = 0;
+        //GameObject.Find("Car").GetComponent<point>().point2 = 0;
 
         updateRand(0);
 
