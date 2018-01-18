@@ -13,7 +13,7 @@ public class TestDataGen : MonoBehaviour
 {
 
     //const string ROAD_NAME = "road";
-    public const int ROAD_COUNT = 1000;
+    public int ROAD_COUNT = 100;
 
     public const float ROAD_SCALE_X = 8;
     public const float ROAD_SCALE_Y = 0.5F;
@@ -53,7 +53,7 @@ public class TestDataGen : MonoBehaviour
     public int testDataCnt;
 
     static Socket listener;
-    static string LocalHost = "192.168.1.35";
+    static string LocalHost = "192.168.1.49";
     static int port = 8787;
     static string data = null;
     bool isFinish = false;
@@ -82,9 +82,10 @@ public class TestDataGen : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        (new Thread(ServerListening)).Start();
+        //(new Thread(ServerListening)).Start();
         autoDrive = GameObject.Find("Car").GetComponent<AutoDrive>();
         carController = GameObject.Find("Car").GetComponent<CarController>();
+        Time.timeScale = 0.7f;
     }
 
     // Update is called once per frame
@@ -100,14 +101,22 @@ public class TestDataGen : MonoBehaviour
             isFinish = true;
             Application.Quit();
         }
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            Time.timeScale += 0.1f;
+        }
+        if (Input.GetKeyDown(KeyCode.D))
+        {
+            Time.timeScale -= 0.1f;
+        }
         if (!isGen)
         {
             ClickBtn();
             isGen = true;
         }
-        if(screanShotCnt % 3 == 0)
+        /*if(screanShotCnt % 3 == 0)
             StartCoroutine(ScreenShot());
-        screanShotCnt++;
+        screanShotCnt++;*/
     }
     
     public void ResetTestData()
@@ -463,7 +472,7 @@ public class TestDataGen : MonoBehaviour
         for (; j < ROAD_COUNT;)
         {
             direction = Random.Range(0, dRate);
-            count = Random.Range(5, 20);
+            count = Random.Range(5, 10);
             if (direction > 1)
             {
                 j += count;

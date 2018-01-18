@@ -12,7 +12,6 @@ using UnityEngine.UI;
 public class DriveByDQN : MonoBehaviour
 {
 
-    static Socket listener;
     static string LocalHost = "192.168.1.49";
     static int port = 8787;
     static string data = "-1";
@@ -28,6 +27,7 @@ public class DriveByDQN : MonoBehaviour
 
 
     private CarController m_car;
+    private AutoDrive autoDrive;
     private Text m_Reward;
     private int CurrentRoad = 11;
 
@@ -35,7 +35,10 @@ public class DriveByDQN : MonoBehaviour
     private float steering = 0;
     private float sensitivity = 1f;
     private float dead = 0.001f;
-    private bool outside = false;
+    public bool outside = false;
+
+    private Thread thread1, thread2;
+    private int current_thread = 1;
 
     int screanShotCnt = 0;
 
@@ -56,8 +59,11 @@ public class DriveByDQN : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        (new Thread(ServerListening)).Start();
+        thread1 = new Thread(ServerListening);
+        thread1.IsBackground = true;
+        thread1.Start();
         m_car = GameObject.Find("Car").GetComponent<CarController>();
+        autoDrive = GameObject.Find("Car").GetComponent<AutoDrive>();
         m_Reward = GameObject.Find("m_Reward").GetComponent<Text>();
         texture2d = new Texture2D(width, height, TextureFormat.RGB24, false);
     }
@@ -66,92 +72,118 @@ public class DriveByDQN : MonoBehaviour
     void FixedUpdate()
     {
         StartCoroutine(ScreenShot());
+        
         ControlCar(Convert.ToInt32(data));
         
         if (CurrentRoad >= 990)
         {
-            GameObject.Find("Road").GetComponent<RoadGenScript>().ClickBtn();
             CurrentRoad = 5;
+            ResetCar(CurrentRoad);
+            GameObject.Find("Road").GetComponent<RoadGenScript>().ClickBtn();
         }
             
         CurrentRoad = GetCurrentRoad();
-        Reward = GetReward();
+        Reward = GetReward() * 30;
         m_Reward.text = GetReward().ToString();
         if (outside == true && Done != CLIENT_GET)
         {
+            data = "-1";
             Done = CLIENT_WAIT;
         }
         else if (Done == CLIENT_GET)
         {
-            ResetCar();
-            CurrentRoad = 5;
+            ResetCar(CurrentRoad);
             Done = NOT_YET;
         }
         else
             Done = NOT_YET;
     }
-    
+
     private void ServerListening()
     {
-        while (true)
+        Socket listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        try
         {
-            listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            try
+            listener.Bind(new IPEndPoint(IPAddress.Parse(LocalHost), port + current_thread - 1));
+            listener.Listen(1);
+            while (true)
             {
-                listener.Bind(new IPEndPoint(IPAddress.Parse(LocalHost), port));
-                listener.Listen(100);
+                Debug.Log("Waiting for client connect.(" + (port + current_thread - 1) + ")");
+                Socket handler = listener.Accept();
+                if (current_thread == 1)
+                {
+                    if (thread2 != null && thread2.IsAlive)
+                    {
+                        thread2.Abort();
+                        thread2 = null;
+                    }
+                    current_thread = 2;
+                    thread2 = new Thread(ServerListening);
+                    thread2.IsBackground = true;
+                    thread2.Start();
+                }
+                else
+                {
+                    if (thread1 != null && thread1.IsAlive)
+                    {
+                        thread1.Abort();
+                        thread1 = null;
+                    }
+                    current_thread = 1;
+                    thread1 = new Thread(ServerListening);
+                    thread1.IsBackground = true;
+                    thread1.Start();
+                }
+                handler.ReceiveTimeout = 300;
+                handler.SendTimeout = 300;
+                byte[] bytes = new byte[1024];
+                int count;
+                Debug.Log("Connect!");
                 while (true)
                 {
-                    Debug.Log("Waiting for client connect.");
-                    Socket handler = listener.Accept();
-                    handler.ReceiveTimeout = 3000;
-                    byte[] bytes = new byte[1024];
-                    int count;
-                    Debug.Log("Connect!");
-                    while (true)
-                    {
-                        Thread.Sleep(300);
-                        handler.Send(carData.screenShot);
-                        carData.screenShot = null;
-                        count = handler.Receive(bytes);
+                    Thread.Sleep(300);
+                    handler.Send(carData.screenShot);
+                    carData.screenShot = null;
+                    count = handler.Receive(bytes);
+                    if (bytes != null)
                         if (!Encoding.ASCII.GetString(bytes, 0, count).Equals("GetInfo"))
                         {
                             handler.Send(Encoding.ASCII.GetBytes("Error"));
                             break;
                         }
-                        handler.Send(Encoding.ASCII.GetBytes(carData.speed + "," + Reward + "," + Done));
-                        count = handler.Receive(bytes);
-                        if (count > 10)
-                        {
-                            handler.Send(Encoding.ASCII.GetBytes("Error"));
-                            break;
-                        }
-                        if (Done == CLIENT_WAIT)
-                            Done = CLIENT_GET;
-                        data = Encoding.ASCII.GetString(bytes, 0, count);
-                        //Debug.Log(carData.speed + " : " + Reward);
+                    handler.Send(Encoding.ASCII.GetBytes(carData.speed + "," + Reward + "," + Done));
+                    //handler.Send(Encoding.ASCII.GetBytes(carData.speed + "," + Reward + "," + Done + "," + autoDrive.direction));
+                    count = handler.Receive(bytes);
+                    if (count > 10)
+                    {
+                        handler.Send(Encoding.ASCII.GetBytes("Error"));
+                        break;
                     }
-                    handler.Close();
-                    handler = null;
+                    if (Done == CLIENT_WAIT)
+                        Done = CLIENT_GET;
+                    if (bytes != null)
+                        data = Encoding.ASCII.GetString(bytes, 0, count);
                 }
+                handler.Close();
+                handler = null;
             }
-            catch (Exception e)
-            {
-                listener.Shutdown(SocketShutdown.Both);
-                listener.Close();
-                Debug.Log(e.Message.ToString());
-            }
+        }
+        catch (Exception e)
+        {
+            Debug.Log(e.Message.ToString());
+            listener.Shutdown(SocketShutdown.Both);
+            listener.Close();
         }
     }
 
     /**
      * No action : 0
-     * Backward : 1
-     * Forward : 2
-     * Left : 3
-     * Right : 4
-     * Forward + Left : 5
-     * Forward + Right : 6
+     * Forward : 1
+     * Left : 2
+     * Right : 3
+     * Forward + Left : 4
+     * Forward + Right : 5
+     * Backward : 6
      * Backward + Left : 7
      * Backward + Right : 8
      **/
@@ -166,30 +198,30 @@ public class DriveByDQN : MonoBehaviour
                 Debug.Log("N");
                 break;
             case 1:
-                Debug.Log("B");
-                accel = AccelSimulation("BACKWARD");
-                break;
-            case 2:
                 Debug.Log("F");
                 accel = AccelSimulation("FORWARD");
                 break;
-            case 3:
+            case 2:
                 Debug.Log("L");
                 steering = SteeringSimulation("LEFT");
                 break;
-            case 4:
+            case 3:
                 Debug.Log("R");
                 steering = SteeringSimulation("RIGHT");
                 break;
-            case 5:
+            case 4:
                 Debug.Log("FL");
                 accel = AccelSimulation("FORWARD");
                 steering = SteeringSimulation("LEFT");
                 break;
-            case 6:
+            case 5:
                 Debug.Log("FR");
                 accel = AccelSimulation("FORWARD");
                 steering = SteeringSimulation("RIGHT");
+                break;
+            case 6:
+                Debug.Log("B");
+                accel = AccelSimulation("BACKWARD");
                 break;
             case 7:
                 Debug.Log("BL");
@@ -237,7 +269,7 @@ public class DriveByDQN : MonoBehaviour
         if (road_x == x)
         {
             float distance = Mathf.Abs(car_x - x);
-            Distance_Reward = (RoadScale.x / 4 - distance) / (RoadScale.x / 4) * 1.5f;
+            Distance_Reward = (RoadScale.x / 6 - distance) / (RoadScale.x / 6) * 1.5f;
             if (Distance_Reward < 0)
                 Distance_Reward = 0;
         }
@@ -246,12 +278,12 @@ public class DriveByDQN : MonoBehaviour
             float a = (road_z - z) / (road_x - x);
             float b = z - a * x;
             float distance = Mathf.Abs(a * car_x - car_z + b) / Mathf.Sqrt(a * a + 1);
-            Distance_Reward = (RoadScale.x / 4 - distance) / (RoadScale.x / 4) * 1.5f;
+            Distance_Reward = (RoadScale.x / 6 - distance) / (RoadScale.x / 6) * 1.5f;
             if (Distance_Reward < 0)
                 Distance_Reward = 0;
         }
         float speed_rate = carData.speed / m_car.MaxSpeed;
-        if (carData.speed < 0)
+        if (carData.speed < 1)
             return 0;
 
         Speed_Reward = speed_rate > 1.5f? 1.5f : (carData.speed < 0? 0f : speed_rate);
@@ -291,13 +323,13 @@ public class DriveByDQN : MonoBehaviour
         GC.Collect();
     }
 
-    public void ResetCar()
+    public void ResetCar(int CurrentRoad)
     {
         GameObject.Find("Car").GetComponent<CarController>().ResetCar();
         GameObject.Find("Car").transform.position = new Vector3(
-                                                            GameObject.Find("road (5)").transform.position.x,
+                                                            GameObject.Find("road (" + CurrentRoad + ")").transform.position.x,
                                                             0.3075473F,
-                                                            GameObject.Find("road (5)").transform.position.z);
-        GameObject.Find("Car").transform.rotation = GameObject.Find("road (5)").transform.rotation;
+                                                            GameObject.Find("road (" + CurrentRoad + ")").transform.position.z);
+        GameObject.Find("Car").transform.rotation = GameObject.Find("road (" + CurrentRoad + ")").transform.rotation;
     }
 }

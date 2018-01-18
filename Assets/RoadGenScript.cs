@@ -60,6 +60,14 @@ public class RoadGenScript : MonoBehaviour
         {
             Application.Quit();
         }
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            Time.timeScale += 0.1f;
+        }
+        if (Input.GetKeyDown(KeyCode.D))
+        {
+            Time.timeScale -= 0.1f;
+        }
         if (!isGen)
         {
             ClickBtn();

@@ -6,7 +6,7 @@ using UnityStandardAssets.Vehicles.Car;
 public class AutoDrive : MonoBehaviour
 {
     private const float SpeedSensitivity = 10f;
-    public int RoadCount = 200;
+    public const int RoadCount = 100;
     private const float InitMaxSpeed = 40f;
     private const float StopAccelRate = 0.8f;
     private const float PreviewRate = 0.3f;
@@ -47,18 +47,20 @@ public class AutoDrive : MonoBehaviour
     {
         if (GameObject.Find("Road").GetComponent<TestDataGen>().isGenFinished == true)
         {
-            if (CurrentRoad >= RoadCount - 15)
+            if (CurrentRoad >= (RoadCount - 15))
             {
-                Time.timeScale = 0;
-                while (training) ;
-                Time.timeScale = 1f;
-                GameObject.Find("Road").GetComponent<TestDataGen>().SendTestData();
+                //Time.timeScale = 0;
+                //while (training) ;
+                //Time.timeScale = 1f;
+                //GameObject.Find("Road").GetComponent<TestDataGen>().SendTestData();
+                GameObject.Find("Car").GetComponent<DriveByDQN>().outside = true;
                 GameObject.Find("Road").GetComponent<TestDataGen>().ClickBtn();
+                CurrentRoad = 5;
                 return;
             }
             if (OutsideCheck())
             {
-                GameObject.Find("Road").GetComponent<TestDataGen>().ResetTestData();
+                //GameObject.Find("Road").GetComponent<TestDataGen>().ResetTestData();
                 if (m_car.CurrentSpeed <= 10f)
                 {
                     GameObject.Find("Road").GetComponent<TestDataGen>().ClickBtn();
@@ -87,17 +89,20 @@ public class AutoDrive : MonoBehaviour
                 if (m_car.CurrentSpeed < MaxSpeedTable[CurrentRoad] * StopAccelRate)
                 {
                     accel = AccelSimulation("FORWARD");
-                    direction += "10";
+                    //direction += "10";
+                    direction = "5";
                 }
                 else if (m_car.CurrentSpeed > MaxSpeedTable[CurrentRoad])
                 {
                     accel = AccelSimulation("BACKWARD");
-                    direction += "01";
+                    //direction += "01";
+                    direction = "8";
                 }
                 else
                 {
                     accel = AccelSimulation("NULL");
-                    direction += "00";
+                    //direction += "00";
+                    direction = "3";
                 }
             }
             else if (-DirectionDegree >= MaxDirectionDegree)
@@ -108,17 +113,20 @@ public class AutoDrive : MonoBehaviour
                 if (m_car.CurrentSpeed < MaxSpeedTable[CurrentRoad] * StopAccelRate)
                 {
                     accel = AccelSimulation("FORWARD");
-                    direction += "10";
+                    //direction += "10";
+                    direction = "4";
                 }
                 else if (m_car.CurrentSpeed > MaxSpeedTable[CurrentRoad])
                 {
                     accel = AccelSimulation("BACKWARD");
-                    direction += "01";
+                    //direction += "01";
+                    direction = "7";
                 }
                 else
                 {
                     accel = AccelSimulation("NULL");
-                    direction += "00";
+                    //direction += "00";
+                    direction = "2";
                 }
             }
             else
@@ -128,17 +136,20 @@ public class AutoDrive : MonoBehaviour
                 if (m_car.CurrentSpeed < MaxSpeedTable[CurrentRoad] * StopAccelRate)
                 {
                     accel = AccelSimulation("FORWARD");
-                    direction += "10";
+                    //direction += "10";
+                    direction = "1";
                 }
                 else if (m_car.CurrentSpeed > MaxSpeedTable[CurrentRoad])
                 {
                     accel = AccelSimulation("BACKWARD");
-                    direction += "01";
+                    //direction += "01";
+                    direction = "6";
                 }
                 else
                 {
                     accel = AccelSimulation("NULL");
-                    direction += "00";
+                    //direction += "00";
+                    direction = "0";
                 }
             }
 
