@@ -77,8 +77,9 @@ public class DriveByDQN : MonoBehaviour
         
         if (CurrentRoad >= 990)
         {
+            data = "-1";
             CurrentRoad = 5;
-            ResetCar(CurrentRoad);
+            //ResetCar(CurrentRoad);
             GameObject.Find("Road").GetComponent<RoadGenScript>().ClickBtn();
         }
             
@@ -92,6 +93,7 @@ public class DriveByDQN : MonoBehaviour
         }
         else if (Done == CLIENT_GET)
         {
+            data = "-1";
             ResetCar(CurrentRoad);
             Done = NOT_YET;
         }
@@ -141,7 +143,7 @@ public class DriveByDQN : MonoBehaviour
                 Debug.Log("Connect!");
                 while (true)
                 {
-                    Thread.Sleep(300);
+                    Thread.Sleep(100);
                     handler.Send(carData.screenShot);
                     carData.screenShot = null;
                     count = handler.Receive(bytes);
@@ -254,7 +256,7 @@ public class DriveByDQN : MonoBehaviour
         if (m_car.transform.position.y < 0.2)
         {
             outside = true;
-            return 0;
+            return -2;
         }
         float Distance_Reward, Speed_Reward;
         Vector3 RoadScale = GameObject.Find("Road").GetComponent<TestDataGen>().getScale();
@@ -269,7 +271,7 @@ public class DriveByDQN : MonoBehaviour
         if (road_x == x)
         {
             float distance = Mathf.Abs(car_x - x);
-            Distance_Reward = (RoadScale.x / 6 - distance) / (RoadScale.x / 6) * 1.5f;
+            Distance_Reward = (RoadScale.x / 2 - distance) / (RoadScale.x / 2) * 1.5f;
             if (Distance_Reward < 0)
                 Distance_Reward = 0;
         }
@@ -278,7 +280,7 @@ public class DriveByDQN : MonoBehaviour
             float a = (road_z - z) / (road_x - x);
             float b = z - a * x;
             float distance = Mathf.Abs(a * car_x - car_z + b) / Mathf.Sqrt(a * a + 1);
-            Distance_Reward = (RoadScale.x / 6 - distance) / (RoadScale.x / 6) * 1.5f;
+            Distance_Reward = (RoadScale.x / 2 - distance) / (RoadScale.x / 2) * 1.5f;
             if (Distance_Reward < 0)
                 Distance_Reward = 0;
         }

@@ -27,7 +27,7 @@ public class RoadGenScript : MonoBehaviour
     public const int MAP_SCALE = 500;
     public const int ROLLBACK = 50;
     public bool SAVE_ROAD = false;  // not available now
-    public int ROAD_DIFFICULTY = 1; // (1:Easy 2:Normal 3:Difficult)
+    public int ROAD_DIFFICULTY = 3; // (1:Easy 2:Normal 3:Difficult)
 
     public bool isGenFinished = false;
 
@@ -325,7 +325,7 @@ public class RoadGenScript : MonoBehaviour
         for (; j < ROAD_COUNT;)
         {
             direction = Random.Range(0, dRate);
-            count = Random.Range(5, 10);
+            count = Random.Range(5, 20);
             if (direction > 1)
             {
                 j += count;
